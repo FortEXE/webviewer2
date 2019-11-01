@@ -7,37 +7,28 @@ package adnankhairi.webviewer2;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Message;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.accessibility.AccessibilityManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -49,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     // inisialisasi web view dengan webview dan progress bar
     private WebView webView;
     private ProgressBar progressBar;
+    private WebViewClient webViewClient;
+    private String url;
+    //JavascriptInterface JSInterface;
     private static final String[] perms = {android.Manifest.permission.CAMERA, android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.MODIFY_AUDIO_SETTINGS};
     @SuppressLint({"NewApi", "SetJavaScriptEnabled"})
     @Override
@@ -56,13 +50,44 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         // mendapatkan id desain dari activity_main.xml
         webView = (WebView) findViewById(R.id.webView);
         progressBar = (ProgressBar) findViewById(R.id.progressBar2);
 
         // menyiapkan web client untuk di luncurkan
-        webView.setWebViewClient(new myWebclient());
-        webView.setWebChromeClient(new myWebChromeClient());
+        webView.setWebViewClient(new WebViewClient() {
+            //Membuat aplikasi default player Android untuk membuka Url video
+            @Override
+            @JavascriptInterface
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.contains("youtube")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    //Eksekusi link sebagai video
+                    intent.setDataAndType(Uri.parse(url), "video/mp4");
+                    startActivity(intent);
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        });
+
+        webView.setWebChromeClient(new myWebChromeClient(){
+
+        });
+        //
+
+
+
+//        webViewClient.shouldInterceptRequest(webView, url){
+//
+
+        class JSInterface {
+            @JavascriptInterface
+            public String toString() { return "jsInterface"; }
+        }
+        webView.addJavascriptInterface(new JSInterface(), "jsInterface");
 
         // pengaturan lanjut untuk penanganan bug
         webView.getSettings().setJavaScriptEnabled(true);
@@ -75,8 +100,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         webView.getSettings().setPluginState(WebSettings.PluginState.ON);
 
         // meluncurkan url yang dituju
-
-        webView.loadUrl("https://ayoketemu.id");
+        String videopath = "http://192.168.89.87/vidplayer"; //link ini menggunakan link localhost yang diakses menggunakan IP komputer yang terhubung ke WiFI
+        webView.loadUrl(videopath);
+        //Intercept http request
 
 
 
@@ -168,5 +194,31 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         return super.onKeyDown(keyCode, event);
     }
+
+
+    @Deprecated
+    public void shouldInterceptRequest(WebView view, String url) {
+        if(url.contains(".mp4") || url.contains("embed")){
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.parse(url), "video/mp4");
+            startActivity(intent);
+        }
+    }
+//    public class JavaScriptInterface {
+//        Context mContext;
+//
+//        /** Instantiate the interface and set the context */
+//        JavaScriptInterface(Context c) {
+//            mContext = c;
+//        }
+//
+//        @android.webkit.JavascriptInterface
+//        public void changeActivity()
+//        {
+//            Intent i = new Intent(JavascriptInterfaceActivity.this, nextActivity.class);
+//            startActivity(i);
+//            finish();
+//        }
+//    }
 
 }
