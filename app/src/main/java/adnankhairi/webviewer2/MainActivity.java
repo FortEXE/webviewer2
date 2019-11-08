@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private ProgressBar progressBar;
     private WebViewClient webViewClient;
     private String url;
+    private static final String TAG = "MainActivity";
     //JavascriptInterface JSInterface;
     private static final String[] perms = {android.Manifest.permission.CAMERA, android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.MODIFY_AUDIO_SETTINGS};
     @SuppressLint({"NewApi", "SetJavaScriptEnabled"})
@@ -57,22 +59,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         // menyiapkan web client untuk di luncurkan
         webView.setWebViewClient(new WebViewClient() {
-            //Membuat aplikasi default player Android untuk membuka Url video
-            @Override
-            @JavascriptInterface
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if (url.contains("youtube")) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    //Eksekusi link sebagai video
-                    intent.setDataAndType(Uri.parse(url), "video/mp4");
-                    startActivity(intent);
-                    return true;
-                }else{
-                    return false;
-                }
-            }
+//            //Membuat aplikasi default player Android untuk membuka Url video
+//            @Override
+//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+//                if(url.contains("mp4")){
+//                    Intent intent = new Intent(Intent.ACTION_VIEW);
+//                    //Eksekusi link sebagai video
+//                    intent.setDataAndType(Uri.parse(url), "video/mp4");
+//                    startActivity(intent);
+//                    Log.d("OWO",url);
+//                    return true;
+//                }else{
+//                    return false;
+//                }
+//            }
         });
 
+
+        //while(webView;loadUrl("javascript:clickFunction()"))
         webView.setWebChromeClient(new myWebChromeClient(){
 
         });
@@ -80,15 +84,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
 
-//        webViewClient.shouldInterceptRequest(webView, url){
-//
-
-        class JSInterface {
-            @JavascriptInterface
-            public String toString() { return "jsInterface"; }
-        }
-        webView.addJavascriptInterface(new JSInterface(), "jsInterface");
-
+        webView.addJavascriptInterface(new WebAppInterface(this), "Android");
         // pengaturan lanjut untuk penanganan bug
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
@@ -100,9 +96,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         webView.getSettings().setPluginState(WebSettings.PluginState.ON);
 
         // meluncurkan url yang dituju
-        String videopath = "http://192.168.89.87/vidplayer"; //link ini menggunakan link localhost yang diakses menggunakan IP komputer yang terhubung ke WiFI
+        String videopath = "http://192.168.15.100/vidplayer"; //link ini menggunakan link localhost yang diakses menggunakan IP komputer yang terhubung ke WiFI
         webView.loadUrl(videopath);
-        //Intercept http request
 
 
 
@@ -195,30 +190,5 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return super.onKeyDown(keyCode, event);
     }
 
-
-    @Deprecated
-    public void shouldInterceptRequest(WebView view, String url) {
-        if(url.contains(".mp4") || url.contains("embed")){
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(Uri.parse(url), "video/mp4");
-            startActivity(intent);
-        }
-    }
-//    public class JavaScriptInterface {
-//        Context mContext;
-//
-//        /** Instantiate the interface and set the context */
-//        JavaScriptInterface(Context c) {
-//            mContext = c;
-//        }
-//
-//        @android.webkit.JavascriptInterface
-//        public void changeActivity()
-//        {
-//            Intent i = new Intent(JavascriptInterfaceActivity.this, nextActivity.class);
-//            startActivity(i);
-//            finish();
-//        }
-//    }
 
 }
