@@ -1,7 +1,9 @@
 package adnankhairi.webviewer2;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
@@ -16,17 +18,11 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public boolean play(String vidio){
-        if(vidio.contains("mp4")){
+    public void play(String vidio){
+            PackageManager pm = context.getPackageManager();
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            //Eksekusi link sebagai video
-            intent.setDataAndType(Uri.parse(vidio), "video/mp4");
+            intent.setDataAndType(Uri.parse(vidio), "video/*");
+            intent.setPackage("com.mxtech.videoplayer.ad");
             context.startActivity(intent);
-            Log.d("OWO",vidio);
-            return true;
-        }else{
-            Log.d("OWO",vidio);
-            return false;
-        }
     }
 }
