@@ -12,14 +12,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
@@ -32,6 +30,7 @@ import android.widget.Toast;
 
 import java.util.List;
 
+import im.delight.android.webview.AdvancedWebView;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.AppSettingsDialog;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -39,11 +38,12 @@ import pub.devrel.easypermissions.EasyPermissions;
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
 
     // inisialisasi web view dengan webview dan progress bar
-    private WebView webView;
+    private AdvancedWebView webView;
     private ProgressBar progressBar;
     private WebViewClient webViewClient;
     private String url;
     private static final String TAG = "MainActivity";
+    public static String PACKAGE_NAME;
     //JavascriptInterface JSInterface;
     private static final String[] perms = {android.Manifest.permission.CAMERA, android.Manifest.permission.RECORD_AUDIO, android.Manifest.permission.MODIFY_AUDIO_SETTINGS};
     @SuppressLint({"NewApi", "SetJavaScriptEnabled"})
@@ -52,59 +52,48 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        //PACKAGE_NAME = getApplicationContext().getPackageName();
         // mendapatkan id desain dari activity_main.xml
-        webView = (WebView) findViewById(R.id.webView);
+        webView = (AdvancedWebView) findViewById(R.id.webView);
         progressBar = (ProgressBar) findViewById(R.id.progressBar2);
 
         // menyiapkan web client untuk di luncurkan
-        webView.setWebViewClient(new WebViewClient() {
-//            //Membuat aplikasi default player Android untuk membuka Url video
-//            @Override
-//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-//                if(url.contains("mp4")){
-//                    Intent intent = new Intent(Intent.ACTION_VIEW);
-//                    //Eksekusi link sebagai video
-//                    intent.setDataAndType(Uri.parse(url), "video/mp4");
-//                    startActivity(intent);
-//                    Log.d("OWO",url);
-//                    return true;
-//                }else{
-//                    return false;
-//                }
-//            }
-        });
-
-
-        //while(webView;loadUrl("javascript:clickFunction()"))
         webView.setWebChromeClient(new myWebChromeClient(){
+            public void onProgressChanged(WebView view, int progress) {
+                super.onProgressChanged(view,progress);
+                if(progress < 100 && progressBar.getVisibility() == ProgressBar.GONE){
+                    progressBar.setVisibility(ProgressBar.VISIBLE);
+                }
 
+                progressBar.setProgress(progress);
+                if(progress == 100) {
+                    progressBar.setVisibility(ProgressBar.GONE);
+                }
+            }
         });
-        //
+        webView.setWebViewClient(new myWebclient());
 
 
 
-        webView.addJavascriptInterface(new WebAppInterface(this), "Android");
+
+
+
+        webView.addJavascriptInterface(new WebAppInterface(this), "stb"); //deklarasi javascript interface
         // pengaturan lanjut untuk penanganan bug
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-        webView.getSettings().setLoadWithOverviewMode(true);
-        webView.getSettings().setUseWideViewPort(true);
-        webView.getSettings().setDomStorageEnabled(true);
-        webView.getSettings().setSupportMultipleWindows(true);
-        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-        webView.getSettings().setPluginState(WebSettings.PluginState.ON);
-
-        // meluncurkan url yang dituju
-        String videopath = "http://192.168.15.100/vidplayer"; //link ini menggunakan link localhost yang diakses menggunakan IP komputer yang terhubung ke WiFI
-        webView.loadUrl(videopath);
+        webView.getSettings().setAllowFileAccessFromFileURLs(true);
+        webView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+        webView.loadUrl("http://platform-epg.infrasvc.id/home/index"); //Masuk ke web
+        WebSettings webSettings = webView.getSettings(); //Allow WebSettings
+        webSettings.setJavaScriptEnabled(true); //Enable Javascript
+        webSettings.setBuiltInZoomControls(true); //Enable zoom control
+        webSettings.setDomStorageEnabled(true);
 
 
 
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){ //Memberi Izin kamera dan mikrofon
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
@@ -116,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     @Override
-    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) { //Ketika tidak diizinkan
         if(EasyPermissions.somePermissionPermanentlyDenied(this, perms)){
             new AppSettingsDialog.Builder(this).build().show();
         }
@@ -124,29 +113,31 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) { //Mengetes result izin
         super.onActivityResult(requestCode, resultCode, data);
-
+        webView.onActivityResult(requestCode, resultCode, data);
         if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE){
 
         }
     }
 
-    public class myWebclient extends WebViewClient {
+    public class myWebclient extends WebViewClient { //Prosedur yang dijalankan saat WebViewClient dipanggil
         @Override
-        public void onPageFinished(WebView view, String url) {
+        public void onPageFinished(WebView view, String url) { //ketika page selesai diload
             super.onPageFinished(view, url);
-            progressBar.setVisibility(View.GONE);
+            progressBar.setVisibility(View.GONE); //matikan progress bar
         }
 
+
         @Override
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        public void onPageStarted(WebView view, String url, Bitmap favicon) { //ketika page mulai diload
             super.onPageStarted(view, url, favicon);
+            progressBar.setVisibility(View.VISIBLE); //munculkan progress bar
         }
 
         @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            view.loadUrl(url);
+        public boolean shouldOverrideUrlLoading(WebView view, String url) { //ketika mengambil http response
+            view.loadUrl(url); //load url
             return super.shouldOverrideUrlLoading(view, url);
         }
 
@@ -154,6 +145,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
             handler.proceed(); // membiarkan Error SSL, sehingga browser dapat di load
         }
+
+
     }
 
 
@@ -162,12 +155,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @AfterPermissionGranted(123)
         @Override
-        public void onPermissionRequest(PermissionRequest request) {
+        public void onPermissionRequest(PermissionRequest request) { //Minta request izin mic dan kamera
 
             PermissionRequest myRequest = request;
-            if (EasyPermissions.hasPermissions(MainActivity.this, perms)){
+            if (EasyPermissions.hasPermissions(MainActivity.this, perms)){ //jika diizinkan, pakai
                 Toast.makeText(MainActivity.this, "Access granted", Toast.LENGTH_SHORT).show();
-            } else {
+            } else { //jika tidak, munculkan warning
                 EasyPermissions.requestPermissions(MainActivity.this, "We need permission for Microphone and Camera", 123, perms);
                 webView.reload();
             }
@@ -181,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     // penggunaan tombol back untuk kembali ke page sebelumnya
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    public boolean onKeyDown(int keyCode, KeyEvent event) { //Kembali ke halaman sebelumnya
         if((keyCode== KeyEvent.KEYCODE_BACK) && webView.canGoBack()){
             webView.goBack();
             return true;
