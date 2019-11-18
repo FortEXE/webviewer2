@@ -2,6 +2,9 @@
 
 Web viewer with multi purpose for Android
 
+Release V1.0.4
+Memungkinkan play dengan VLC
+
 Release V1.0.3
 Memungkinkan Apk yang memilih player
 
