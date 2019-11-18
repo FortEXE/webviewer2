@@ -2,6 +2,9 @@
 
 Web viewer with multi purpose for Android
 
+Release V1.0.3
+Memungkinkan Apk yang memilih player
+
 Release V1.0.2
 Memungkinkan menonton video dengan button javascript, tetapi masih dengan hardcode URL 
 
