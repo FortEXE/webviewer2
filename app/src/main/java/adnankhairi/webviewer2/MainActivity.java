@@ -1,6 +1,6 @@
 // aplikasi web view
-// adnan khairi
-// email: adnankhairi@student.upi.edu
+// adnan khairi & Ammar Ashshiddiqi
+// email: adnankhairi@student.upi.edu, ammar.ashshiddiqi@student.upi.edu
 
 package adnankhairi.webviewer2;
 
@@ -8,20 +8,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.webkit.PermissionRequest;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -40,8 +37,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     // inisialisasi web view dengan webview dan progress bar
     private AdvancedWebView webView;
     private ProgressBar progressBar;
-    private WebViewClient webViewClient;
-    private String url;
     private static final String TAG = "MainActivity";
     public static String PACKAGE_NAME;
     //JavascriptInterface JSInterface;
@@ -73,11 +68,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         });
         webView.setWebViewClient(new myWebclient());
 
-
-
-
-
-
         webView.addJavascriptInterface(new WebAppInterface(this), "stb"); //deklarasi javascript interface
         // pengaturan lanjut untuk penanganan bug
         webView.getSettings().setAllowFileAccessFromFileURLs(true);
@@ -87,9 +77,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         webSettings.setJavaScriptEnabled(true); //Enable Javascript
         webSettings.setBuiltInZoomControls(true); //Enable zoom control
         webSettings.setDomStorageEnabled(true);
-
-
-
     }
 
     @Override
@@ -145,13 +132,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
             handler.proceed(); // membiarkan Error SSL, sehingga browser dapat di load
         }
-
-
     }
 
 
     public class myWebChromeClient extends WebChromeClient{
-
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @AfterPermissionGranted(123)
         @Override
@@ -164,13 +148,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 EasyPermissions.requestPermissions(MainActivity.this, "We need permission for Microphone and Camera", 123, perms);
                 webView.reload();
             }
-
             myRequest.grant(myRequest.getResources());
-
         }
-
     }
-
 
     // penggunaan tombol back untuk kembali ke page sebelumnya
     @Override
